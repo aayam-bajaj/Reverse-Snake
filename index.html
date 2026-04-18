@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,167 +11,266 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-color: #0f172a; /* tailwind slate-900 */
+            background-color: #0f172a;
+            /* tailwind slate-900 */
             color: white;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden; /* Prevent scrolling with arrows */
-            touch-action: none; /* Prevent double-tap zoom on mobile */
+            overflow: hidden;
+            /* Prevent scrolling with arrows */
+            touch-action: none;
+            /* Prevent double-tap zoom on mobile */
         }
+
         canvas {
-            background-color: #1e293b; /* tailwind slate-800 */
+            background-color: #1e293b;
+            /* tailwind slate-800 */
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
             border-radius: 8px;
-            border: 2px solid #334155; /* tailwind slate-700 */
+            border: 2px solid #334155;
+            /* tailwind slate-700 */
             transition: box-shadow 0.2s;
         }
+
         /* New Cool CRT Scanline Effect */
         .scanlines {
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 4px, 3px 100%;
             pointer-events: none;
         }
+
         /* Custom Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(30, 41, 59, 0.5); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.5); border-radius: 10px; }
-        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.5);
+            border-radius: 10px;
+        }
+
         /* Screen Shake Animation */
         @keyframes shake {
-            10%, 90% { transform: translate3d(-2px, 0, 0); }
-            20%, 80% { transform: translate3d(3px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
-            40%, 60% { transform: translate3d(5px, 0, 0); }
+
+            10%,
+            90% {
+                transform: translate3d(-2px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: translate3d(3px, 0, 0);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translate3d(-5px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: translate3d(5px, 0, 0);
+            }
         }
+
         .shake-animation {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
         }
     </style>
 </head>
+
 <body class="h-screen flex flex-col items-center justify-center relative">
 
     <!-- Global Mute Button -->
-    <button id="muteBtn" class="absolute top-4 left-4 z-50 text-2xl sm:text-3xl drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition transform hover:scale-110 active:scale-95">
+    <button id="muteBtn"
+        class="absolute top-4 left-4 z-50 text-2xl sm:text-3xl drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition transform hover:scale-110 active:scale-95">
         🔊
     </button>
 
     <!-- Active Game Header (Hidden on Home Screen) -->
-    <div id="gameHeader" class="text-center mb-2 sm:mb-4 hidden opacity-0 transition-opacity duration-500 h-14 sm:h-16 w-full max-w-[500px] flex flex-col items-center justify-center relative">
-        <p id="tipDisplay" class="text-yellow-400 text-xs sm:text-sm font-bold animate-pulse mb-2">Tip: Walk off the edge of the screen to wrap around!</p>
-        
+    <div id="gameHeader"
+        class="text-center mb-2 sm:mb-4 hidden opacity-0 transition-opacity duration-500 h-14 sm:h-16 w-full max-w-[500px] flex flex-col items-center justify-center relative">
+        <p id="tipDisplay" class="text-yellow-400 text-xs sm:text-sm font-bold animate-pulse mb-2">Tip: Walk off the
+            edge of the screen to wrap around!</p>
+
         <!-- Graze Multiplier UI -->
-        <div id="grazeUI" class="absolute right-2 sm:right-4 top-0 bg-red-900/80 border border-red-500 text-red-100 font-bold px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs opacity-0 transition-opacity shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+        <div id="grazeUI"
+            class="absolute right-2 sm:right-4 top-0 bg-red-900/80 border border-red-500 text-red-100 font-bold px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs opacity-0 transition-opacity shadow-[0_0_10px_rgba(239,68,68,0.5)]">
             🔥 GRAZE <span id="grazeValue">x1.0</span>
         </div>
 
-        <div class="flex justify-center gap-4 sm:gap-6 text-xs sm:text-sm bg-slate-800/80 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-slate-700 shadow-md scale-90 sm:scale-100">
-            <span class="text-cyan-400 font-bold flex items-center gap-1">🧊 <span class="hidden sm:inline">Ice Cube: </span>Freezes</span>
-            <span class="text-yellow-400 font-bold flex items-center gap-1">🔋 <span class="hidden sm:inline">Battery: </span>+1 Teleport</span>
+        <div
+            class="flex justify-center gap-4 sm:gap-6 text-xs sm:text-sm bg-slate-800/80 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-slate-700 shadow-md scale-90 sm:scale-100">
+            <span class="text-cyan-400 font-bold flex items-center gap-1">🧊 <span class="hidden sm:inline">Ice Cube:
+                </span>Freezes</span>
+            <span class="text-yellow-400 font-bold flex items-center gap-1">🔋 <span class="hidden sm:inline">Battery:
+                </span>+1 Teleport</span>
         </div>
     </div>
 
-    <div class="relative flex justify-center w-full mx-auto" style="width: min(95vw, 500px, 65vh); height: min(95vw, 500px, 65vh);">
-        <canvas id="gameCanvas" width="500" height="500" class="w-full h-full touch-none z-0 relative rounded-lg"></canvas>
-        
+    <div class="relative flex justify-center w-full mx-auto"
+        style="width: min(95vw, 500px, 65vh); height: min(95vw, 500px, 65vh);">
+        <canvas id="gameCanvas" width="500" height="500"
+            class="w-full h-full touch-none z-0 relative rounded-lg"></canvas>
+
         <!-- Pause Overlay -->
-        <div id="pauseOverlay" class="hidden absolute inset-0 z-40 bg-slate-900/70 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center text-white cursor-pointer">
-            <h2 class="text-4xl sm:text-5xl font-bold tracking-widest drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">PAUSED</h2>
+        <div id="pauseOverlay"
+            class="hidden absolute inset-0 z-40 bg-slate-900/70 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center text-white cursor-pointer">
+            <h2 class="text-4xl sm:text-5xl font-bold tracking-widest drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                PAUSED</h2>
             <p class="mt-4 text-slate-300 font-semibold animate-pulse">Tap anywhere to resume</p>
         </div>
 
         <!-- UI Overlay Base -->
-        <div id="uiOverlay" class="absolute inset-0 w-full h-full mx-auto bg-slate-900/90 rounded-lg backdrop-blur-md transition-all duration-300 z-10 overflow-hidden block">
+        <div id="uiOverlay"
+            class="absolute inset-0 w-full h-full mx-auto bg-slate-900/90 rounded-lg backdrop-blur-md transition-all duration-300 z-10 overflow-hidden block">
             <div class="scanlines absolute inset-0 z-0 opacity-40 pointer-events-none"></div>
-            
+
             <!-- Top Stats -->
-            <div id="topMenuStats" class="absolute top-3 sm:top-4 left-0 right-0 flex justify-end sm:justify-between px-4 sm:px-6 w-full text-xs sm:text-sm font-bold z-30 pointer-events-none">
+            <div id="topMenuStats"
+                class="absolute top-3 sm:top-4 left-0 right-0 flex justify-end sm:justify-between px-4 sm:px-6 w-full text-xs sm:text-sm font-bold z-30 pointer-events-none">
                 <!-- Hid BEST text on mobile to avoid overlap with mute button -->
-                <div class="text-slate-400 hidden sm:block">BEST: <span id="highScoreDisplay" class="text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">0s</span></div>
-                <div class="text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] pointer-events-auto">✨ <span id="orbsDisplay">0</span> ORBS</div>
+                <div class="text-slate-400 hidden sm:block">BEST: <span id="highScoreDisplay"
+                        class="text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">0s</span></div>
+                <div class="text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] pointer-events-auto">✨ <span
+                        id="orbsDisplay">0</span> ORBS</div>
             </div>
 
             <!-- Home Screen -->
-            <div id="homeScreen" class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6 z-20 w-full h-full pt-6">
-                <h1 class="text-3xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-400 to-yellow-500 mb-1 sm:mb-2 tracking-wider drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]">REVERSE SNAKE</h1>
-                <p class="text-slate-300 mb-3 sm:mb-6 text-xs sm:text-sm font-medium">You are the <span class="text-red-400 font-bold">Food</span>. Run away from the <span class="text-green-400 font-bold">Snake</span>!</p>
-                
+            <div id="homeScreen"
+                class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6 z-20 w-full h-full pt-6">
+                <h1
+                    class="text-3xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-400 to-yellow-500 mb-1 sm:mb-2 tracking-wider drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]">
+                    REVERSE SNAKE</h1>
+                <p class="text-slate-300 mb-3 sm:mb-6 text-xs sm:text-sm font-medium">You are the <span
+                        class="text-red-400 font-bold">Food</span>. Run away from the <span
+                        class="text-green-400 font-bold">Snake</span>!</p>
+
                 <div class="mb-3 sm:mb-4 w-full max-w-[320px]">
-                    <p class="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2 font-bold">Select Difficulty</p>
+                    <p
+                        class="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-widest mb-1.5 sm:mb-2 font-bold">
+                        Select Difficulty</p>
                     <div class="flex justify-between gap-2">
-                        <button class="diff-btn flex-1 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold border-2 border-green-500/30 text-green-500 opacity-70 hover:bg-green-500/10 transition-all" data-diff="easy">Easy</button>
-                        <button class="diff-btn flex-1 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold border-2 border-yellow-500 text-yellow-400 bg-yellow-500/10 transition-all drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]" data-diff="normal">Normal</button>
-                        <button class="diff-btn flex-1 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold border-2 border-red-500/30 text-red-500 opacity-70 hover:bg-red-500/10 transition-all" data-diff="hard">Hard</button>
+                        <button
+                            class="diff-btn flex-1 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold border-2 border-green-500/30 text-green-500 opacity-70 hover:bg-green-500/10 transition-all"
+                            data-diff="easy">Easy</button>
+                        <button
+                            class="diff-btn flex-1 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold border-2 border-yellow-500 text-yellow-400 bg-yellow-500/10 transition-all drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]"
+                            data-diff="normal">Normal</button>
+                        <button
+                            class="diff-btn flex-1 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold border-2 border-red-500/30 text-red-500 opacity-70 hover:bg-red-500/10 transition-all"
+                            data-diff="hard">Hard</button>
                     </div>
                 </div>
 
                 <p class="text-slate-400 text-[10px] sm:text-xs mb-3 sm:mb-4 max-w-[280px] leading-relaxed">
-                    Use <kbd class="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-200">Arrows</kbd> / <kbd class="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-200">WASD</kbd> or <span class="text-white font-bold">Swipe</span>.<br>
-                    Press <kbd class="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-200">T</kbd> or <span class="text-white font-bold">Tap</span> to Teleport.
+                    Use <kbd
+                        class="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-200">Arrows</kbd> /
+                    <kbd class="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-200">WASD</kbd> or
+                    <span class="text-white font-bold">Swipe</span>.<br>
+                    Press <kbd class="bg-slate-800 px-1 py-0.5 rounded border border-slate-700 text-slate-200">T</kbd>
+                    or <span class="text-white font-bold">Tap</span> to Teleport.
                 </p>
 
                 <div class="flex gap-2 w-full max-w-[320px] mb-2 sm:mb-3">
-                    <button id="openMarketBtn" class="flex-1 py-2 sm:py-3 bg-slate-800 text-cyan-400 hover:bg-slate-700 border border-cyan-500/30 font-bold rounded-xl shadow-[0_0_10px_rgba(34,211,238,0.2)] transition transform hover:scale-105 active:scale-95 text-[10px] sm:text-xs tracking-wide">
+                    <button id="openMarketBtn"
+                        class="flex-1 py-2 sm:py-3 bg-slate-800 text-cyan-400 hover:bg-slate-700 border border-cyan-500/30 font-bold rounded-xl shadow-[0_0_10px_rgba(34,211,238,0.2)] transition transform hover:scale-105 active:scale-95 text-[10px] sm:text-xs tracking-wide">
                         🛒 MARKET
                     </button>
-                    <button id="openAchieveBtn" class="flex-1 py-2 sm:py-3 bg-slate-800 text-purple-400 hover:bg-slate-700 border border-purple-500/30 font-bold rounded-xl shadow-[0_0_10px_rgba(168,85,247,0.2)] transition transform hover:scale-105 active:scale-95 text-[10px] sm:text-xs tracking-wide">
+                    <button id="openAchieveBtn"
+                        class="flex-1 py-2 sm:py-3 bg-slate-800 text-purple-400 hover:bg-slate-700 border border-purple-500/30 font-bold rounded-xl shadow-[0_0_10px_rgba(168,85,247,0.2)] transition transform hover:scale-105 active:scale-95 text-[10px] sm:text-xs tracking-wide">
                         🏆 ACHIEVEMENTS
                     </button>
                 </div>
-                
-                <button id="startBtn" disabled class="w-full max-w-[320px] py-3 sm:py-4 bg-white text-slate-900 hover:bg-slate-200 font-bold rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.4)] transition transform hover:scale-105 active:scale-95 tracking-wide text-base sm:text-lg disabled:opacity-50 disabled:cursor-wait">
+
+                <button id="startBtn" disabled
+                    class="w-full max-w-[320px] py-3 sm:py-4 bg-white text-slate-900 hover:bg-slate-200 font-bold rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.4)] transition transform hover:scale-105 active:scale-95 tracking-wide text-base sm:text-lg disabled:opacity-50 disabled:cursor-wait">
                     LOADING DATA...
                 </button>
             </div>
 
             <!-- Market Screen (Explicitly Absolute & Full Container) -->
-            <div id="marketScreen" class="hidden absolute inset-0 flex-col items-center w-full h-full px-4 sm:px-8 py-4 sm:py-6 z-20 bg-slate-900/95">
+            <div id="marketScreen"
+                class="hidden absolute inset-0 flex-col items-center w-full h-full px-4 sm:px-8 py-4 sm:py-6 z-20 bg-slate-900/95">
                 <div class="w-full flex justify-between items-center mb-3 sm:mb-4 shrink-0 max-w-[360px]">
-                    <h2 class="text-2xl sm:text-3xl font-bold text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]">MARKET</h2>
-                    <button class="closeMenuBtn px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm rounded-xl border border-slate-600 transition transform hover:scale-105 active:scale-95 shadow-lg">Back</button>
+                    <h2
+                        class="text-2xl sm:text-3xl font-bold text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]">
+                        MARKET</h2>
+                    <button
+                        class="closeMenuBtn px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm rounded-xl border border-slate-600 transition transform hover:scale-105 active:scale-95 shadow-lg">Back</button>
                 </div>
-                <div class="w-full max-w-[360px] overflow-y-auto flex-1 min-h-0 pr-2 pb-4 custom-scrollbar overscroll-contain touch-pan-y pointer-events-auto" id="upgradeList"></div>
+                <div class="w-full max-w-[360px] overflow-y-auto flex-1 min-h-0 pr-2 pb-4 custom-scrollbar overscroll-contain touch-pan-y pointer-events-auto"
+                    id="upgradeList"></div>
             </div>
 
             <!-- Achievements Screen (Explicitly Absolute & Full Container) -->
-            <div id="achieveScreen" class="hidden absolute inset-0 flex-col items-center w-full h-full px-4 sm:px-8 py-4 sm:py-6 z-20 bg-slate-900/95">
+            <div id="achieveScreen"
+                class="hidden absolute inset-0 flex-col items-center w-full h-full px-4 sm:px-8 py-4 sm:py-6 z-20 bg-slate-900/95">
                 <div class="w-full flex justify-between items-center mb-3 sm:mb-4 shrink-0 max-w-[360px]">
-                    <h2 class="text-xl sm:text-3xl font-bold text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.6)]">ACHIEVEMENTS</h2>
-                    <button class="closeMenuBtn px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm rounded-xl border border-slate-600 transition transform hover:scale-105 active:scale-95 shadow-lg">Back</button>
+                    <h2
+                        class="text-xl sm:text-3xl font-bold text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.6)]">
+                        ACHIEVEMENTS</h2>
+                    <button
+                        class="closeMenuBtn px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm rounded-xl border border-slate-600 transition transform hover:scale-105 active:scale-95 shadow-lg">Back</button>
                 </div>
-                <div class="w-full max-w-[360px] overflow-y-auto flex-1 min-h-0 pr-2 pb-4 custom-scrollbar overscroll-contain touch-pan-y pointer-events-auto" id="achieveList"></div>
+                <div class="w-full max-w-[360px] overflow-y-auto flex-1 min-h-0 pr-2 pb-4 custom-scrollbar overscroll-contain touch-pan-y pointer-events-auto"
+                    id="achieveList"></div>
             </div>
 
             <!-- Game Over Screen -->
-            <div id="gameOverScreen" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6 w-full h-full z-20 pt-4">
+            <div id="gameOverScreen"
+                class="hidden absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6 w-full h-full z-20 pt-4">
                 <h2 id="uiTitle" class="text-3xl sm:text-4xl font-bold mb-1">Game Over</h2>
                 <p id="winSubMessage" class="text-green-400 mt-1 sm:mt-2 font-bold text-sm sm:text-lg hidden"></p>
-                <div id="newBestBadge" class="hidden mt-1 sm:mt-2 px-3 py-1 bg-yellow-500/20 text-yellow-400 text-[10px] sm:text-xs font-bold rounded-full border border-yellow-500/50 animate-bounce">🔥 NEW HIGH SCORE! 🔥</div>
-                
-                <div class="my-4 sm:my-6 bg-slate-800/50 w-[85%] sm:w-3/4 px-4 sm:px-8 py-3 sm:py-4 rounded-2xl border border-slate-700 shadow-inner flex flex-col gap-2">
+                <div id="newBestBadge"
+                    class="hidden mt-1 sm:mt-2 px-3 py-1 bg-yellow-500/20 text-yellow-400 text-[10px] sm:text-xs font-bold rounded-full border border-yellow-500/50 animate-bounce">
+                    🔥 NEW HIGH SCORE! 🔥</div>
+
+                <div
+                    class="my-4 sm:my-6 bg-slate-800/50 w-[85%] sm:w-3/4 px-4 sm:px-8 py-3 sm:py-4 rounded-2xl border border-slate-700 shadow-inner flex flex-col gap-2">
                     <div>
                         <p class="text-slate-400 text-[9px] sm:text-[10px] uppercase tracking-wider">Survival Time</p>
-                        <p class="text-3xl sm:text-4xl font-bold text-white"><span id="finalScore" class="text-yellow-400">0</span><span class="text-lg sm:text-xl text-slate-500 ml-1">s</span></p>
+                        <p class="text-3xl sm:text-4xl font-bold text-white"><span id="finalScore"
+                                class="text-yellow-400">0</span><span
+                                class="text-lg sm:text-xl text-slate-500 ml-1">s</span></p>
                     </div>
                     <div class="w-full h-px bg-slate-700"></div>
                     <div>
-                        <p class="text-slate-400 text-[9px] sm:text-[10px] uppercase tracking-wider">Orbs Earned <span id="finalGrazeNote" class="text-red-400 text-[9px] sm:text-[10px]"></span></p>
+                        <p class="text-slate-400 text-[9px] sm:text-[10px] uppercase tracking-wider">Orbs Earned <span
+                                id="finalGrazeNote" class="text-red-400 text-[9px] sm:text-[10px]"></span></p>
                         <p class="text-lg sm:text-xl font-bold text-cyan-400">+<span id="earnedOrbs">0</span> ✨</p>
                     </div>
                 </div>
 
                 <div class="flex gap-2 sm:gap-3">
-                    <button id="menuBtn" class="px-5 sm:px-6 py-2.5 sm:py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm sm:text-base rounded-xl border border-slate-600 transition transform hover:scale-105 active:scale-95">Menu</button>
-                    <button id="restartBtn" class="px-5 sm:px-6 py-2.5 sm:py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-sm sm:text-base rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.4)] transition transform hover:scale-105 active:scale-95">Try Again</button>
+                    <button id="menuBtn"
+                        class="px-5 sm:px-6 py-2.5 sm:py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm sm:text-base rounded-xl border border-slate-600 transition transform hover:scale-105 active:scale-95">Menu</button>
+                    <button id="restartBtn"
+                        class="px-5 sm:px-6 py-2.5 sm:py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-sm sm:text-base rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.4)] transition transform hover:scale-105 active:scale-95">Try
+                        Again</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="mt-4 sm:mt-6 flex gap-4 sm:gap-10 text-xs sm:text-base font-semibold bg-slate-800/80 px-4 sm:px-8 py-2 sm:py-3 rounded-2xl border border-slate-700 shadow-lg z-0">
-        <div class="flex flex-col items-center"><span class="text-slate-400 text-[10px] uppercase tracking-widest">Time</span> <span id="timeDisplay" class="text-yellow-400 text-lg">0s</span></div>
+    <div
+        class="mt-4 sm:mt-6 flex gap-4 sm:gap-10 text-xs sm:text-base font-semibold bg-slate-800/80 px-4 sm:px-8 py-2 sm:py-3 rounded-2xl border border-slate-700 shadow-lg z-0">
+        <div class="flex flex-col items-center"><span
+                class="text-slate-400 text-[10px] uppercase tracking-widest">Time</span> <span id="timeDisplay"
+                class="text-yellow-400 text-lg">0s</span></div>
         <div class="w-px bg-slate-700"></div>
-        <div class="flex flex-col items-center"><span class="text-slate-400 text-[10px] uppercase tracking-widest">Size</span> <span id="difficultyDisplay" class="text-green-400 text-lg">1</span></div>
+        <div class="flex flex-col items-center"><span
+                class="text-slate-400 text-[10px] uppercase tracking-widest">Size</span> <span id="difficultyDisplay"
+                class="text-green-400 text-lg">1</span></div>
         <div class="w-px bg-slate-700"></div>
-        <div class="flex flex-col items-center"><span class="text-slate-400 text-[10px] uppercase tracking-widest">Teleports</span> <span id="teleportsDisplay" class="text-blue-400 text-lg">3</span></div>
+        <div class="flex flex-col items-center"><span
+                class="text-slate-400 text-[10px] uppercase tracking-widest">Teleports</span> <span
+                id="teleportsDisplay" class="text-blue-400 text-lg">3</span></div>
     </div>
 
     <script type="module">
@@ -220,9 +320,9 @@
         let currentDiff = 'normal';
 
         // --- Save Data & Market & Achievements System ---
-        let pData = { 
-            highScore: 0, orbs: 0, 
-            upgrades: { battery: 0, cryo: 0, serum: 0 }, 
+        let pData = {
+            highScore: 0, orbs: 0,
+            upgrades: { battery: 0, cryo: 0, serum: 0 },
             skins: ['apple'], equippedSkin: 'apple',
             achieves: { survive60: false, wallTrick: false, grazeMaster: false, pacman: false }
         };
@@ -259,7 +359,7 @@
             try {
                 const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
                 appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                
+
                 if (Object.keys(firebaseConfig).length > 0) {
                     const app = initializeApp(firebaseConfig);
                     auth = getAuth(app);
@@ -294,13 +394,13 @@
                     if (docSnap.exists()) {
                         mergeData(docSnap.data());
                     }
-                } catch(e) { console.error("Cloud load failed", e); }
+                } catch (e) { console.error("Cloud load failed", e); }
             } else {
                 const saved = localStorage.getItem('reverseSnakeDataV3');
                 if (saved) mergeData(JSON.parse(saved));
             }
             updateMenuStats();
-            
+
             // Enable UI after data loads
             startBtn.disabled = false;
             startBtn.innerText = "PLAY NOW";
@@ -319,7 +419,7 @@
             if (db && userId) {
                 try {
                     await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'playerData', 'saveFile'), pData);
-                } catch(e) { console.error("Cloud save failed", e); }
+                } catch (e) { console.error("Cloud save failed", e); }
             } else {
                 localStorage.setItem('reverseSnakeDataV3', JSON.stringify(pData));
             }
@@ -345,10 +445,10 @@
         let bgmTimeout;
         let bgmStep = 0;
         let isMuted = false;
-        
+
         // Shifted up by 2 octaves so it is clearly audible on phone and laptop speakers!
         const bassNotes = [130.81, 130.81, 155.56, 174.61]; // C3, C3, Eb3, F3
-        
+
         muteBtn.addEventListener('click', () => {
             isMuted = !isMuted;
             muteBtn.innerText = isMuted ? '🔇' : '🔊';
@@ -362,24 +462,24 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             const filter = audioCtx.createBiquadFilter();
-            
+
             // Bass patch - Using sawtooth for an aggressive retro arcade buzz
             osc.type = 'sawtooth';
             osc.frequency.value = bassNotes[bgmStep % bassNotes.length];
-            
+
             // Lowpass Envelope filter - Widened the cutoff so high frequencies come through
             filter.type = 'lowpass';
             filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
             filter.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
-            
+
             osc.connect(filter);
             filter.connect(gain);
             gain.connect(audioCtx.destination);
-            
+
             // Volume Envelope - Slightly louder
             gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-            
+
             osc.start();
             osc.stop(audioCtx.currentTime + 0.15);
 
@@ -456,17 +556,17 @@
         let snakeDy = 1;
         let snakeBlindSteps = 0;
         let wrapCount = 0;
-        
+
         // Graze Mechanic State
         let grazePoints = 0;
         let grazeMult = 1.0;
-        
+
         // Powerups & Aesthetics
         let activePowerup = null; // {x, y, type}
         let lastPowerupSpawnTime = 0;
         let freezeEndTime = 0;
         let particles = [];
-        
+
         let player = { x: 10, y: 15 }; // The "Food"
         let snake = [];
         let snakeMaxLength = 3;
@@ -496,11 +596,11 @@
             // Snake starts at the top
             snake = [{ x: 10, y: 2 }, { x: 10, y: 1 }, { x: 10, y: 0 }];
             snakeMaxLength = 3;
-            
-            snakeSpeed = diffConfig.baseSpeed + (pData.upgrades.serum * 15); 
+
+            snakeSpeed = diffConfig.baseSpeed + (pData.upgrades.serum * 15);
             survivalTime = 0;
-            teleports = diffConfig.teleports + pData.upgrades.battery; 
-            
+            teleports = diffConfig.teleports + pData.upgrades.battery;
+
             gameStartTime = performance.now();
             pauseTimeOffset = 0;
             lastSnakeMoveTime = performance.now();
@@ -508,19 +608,19 @@
             isPaused = false;
             isStunned = false;
             snakeDx = 0; snakeDy = 1; snakeBlindSteps = 0;
-            
+
             wrapCount = 0;
             grazePoints = 0;
             grazeMult = 1.0;
             grazeUI.classList.replace('opacity-100', 'opacity-0');
-            
+
             activePowerup = null;
             lastPowerupSpawnTime = performance.now();
             freezeEndTime = 0;
             particles = [];
-            
+
             changeTip();
-            
+
             // UI Transitions
             uiOverlay.classList.add('hidden');
             homeScreen.classList.add('hidden');
@@ -529,21 +629,21 @@
             achieveScreen.classList.add('hidden');
             topMenuStats.classList.add('hidden');
             pauseOverlay.classList.add('hidden');
-            
+
             gameHeader.classList.remove('hidden');
             setTimeout(() => gameHeader.classList.remove('opacity-0'), 50);
-            
+
             canvas.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.5)"; // Reset glow
             if (winSubMessage) winSubMessage.style.display = 'none';
             difficultyDisplay.className = `text-lg ${currentDiff === 'easy' ? 'text-green-400' : currentDiff === 'normal' ? 'text-yellow-400' : 'text-red-400'}`;
-            
+
             updateDashboard();
-            
+
             // Start BGM
             bgmStep = 0;
-            if(bgmTimeout) clearTimeout(bgmTimeout);
+            if (bgmTimeout) clearTimeout(bgmTimeout);
             playBGM();
-            
+
             requestAnimationFrame(gameLoop);
         }
 
@@ -554,7 +654,7 @@
             if (isPaused) {
                 pauseOverlay.classList.remove('hidden');
                 pauseStartTime = performance.now();
-                if(bgmTimeout) clearTimeout(bgmTimeout);
+                if (bgmTimeout) clearTimeout(bgmTimeout);
             } else {
                 pauseOverlay.classList.add('hidden');
                 // Adjust timers so physics don't jump forward
@@ -563,7 +663,7 @@
                 lastSnakeMoveTime += pauseDuration;
                 lastPowerupSpawnTime += pauseDuration;
                 if (freezeEndTime > performance.now()) freezeEndTime += pauseDuration;
-                
+
                 playBGM();
                 requestAnimationFrame(gameLoop);
             }
@@ -575,7 +675,7 @@
                 togglePause();
             }
         });
-        
+
         pauseOverlay.addEventListener('click', togglePause);
 
         // Core Game Loop
@@ -592,19 +692,19 @@
             if (wrapCount >= 10) unlockAchievement('pacman');
 
             adjustDifficulty();
-            
+
             // Graze Mechanic Logic
             let head = snake[0];
             let dist = Math.abs(head.x - player.x) + Math.abs(head.y - player.y);
             let isFrozen = timestamp < freezeEndTime;
-            
+
             if (dist <= 4 && !isFrozen) {
                 grazePoints += 1.5; // Build up quickly in danger
             } else {
                 grazePoints -= 1.0; // Decay
             }
             if (grazePoints < 0) grazePoints = 0;
-            
+
             // Calc Multiplier (caps at 4.0x)
             let newMult = 1.0 + Math.min(3.0, Math.floor(grazePoints / 40) * 0.5);
             if (newMult !== grazeMult) {
@@ -667,7 +767,7 @@
                 playSound('powerup');
                 if (activePowerup.type === 'ice') {
                     let duration = 3000 + (pData.upgrades.cryo * 1000);
-                    freezeEndTime = performance.now() + duration; 
+                    freezeEndTime = performance.now() + duration;
                     spawnParticles(player.x, player.y, '#06b6d4', 20);
                 } else if (activePowerup.type === 'battery') {
                     teleports++;
@@ -690,15 +790,16 @@
             } else {
                 const moves = [
                     { x: head.x, y: head.y - 1, dx: 0, dy: -1 },
-                    { x: head.x, y: head.y + 1, dx: 0, dy: 1 }, 
+                    { x: head.x, y: head.y + 1, dx: 0, dy: 1 },
                     { x: head.x - 1, y: head.y, dx: -1, dy: 0 },
-                    { x: head.x + 1, y: head.y, dx: 1, dy: 0 }  
+                    { x: head.x + 1, y: head.y, dx: 1, dy: 0 }
                 ];
 
                 let validMoves = moves.filter(m => !(m.dx === -snakeDx && m.dy === -snakeDy));
                 validMoves = validMoves.filter(m => {
                     return !snake.slice(0, -1).some(segment => segment.x === m.x && segment.y === m.y);
                 });
+                validMoves = validMoves.filter(m => m.x >= 0 && m.x < tileCount && m.y >= 0 && m.y < tileCount);
 
                 if (validMoves.length === 0) {
                     winGame("The Snake got tangled in itself!");
@@ -715,12 +816,11 @@
                 nextHead = validMoves[0];
             }
 
-            // Snake Wall Crash (Snake cannot wrap)
-            if (nextHead.x < 0 || nextHead.x >= tileCount || nextHead.y < 0 || nextHead.y >= tileCount) {
-                unlockAchievement('wallTrick');
-                winGame("The Snake crashed into a wall!");
-                return;
-            }
+            // Prevent snake from going out of bounds during blind steps
+            if (nextHead.x < 0) nextHead.x = 0;
+            if (nextHead.x >= tileCount) nextHead.x = tileCount - 1;
+            if (nextHead.y < 0) nextHead.y = 0;
+            if (nextHead.y >= tileCount) nextHead.y = tileCount - 1;
 
             // Snake Body Crash
             if (snake.slice(0, -1).some(seg => seg.x === nextHead.x && seg.y === nextHead.y)) {
@@ -764,11 +864,11 @@
         }
 
         function processGameEnd() {
-            if(bgmTimeout) clearTimeout(bgmTimeout);
+            if (bgmTimeout) clearTimeout(bgmTimeout);
             let baseEarned = Math.ceil(survivalTime / 2);
             let mult = difficulties[currentDiff].orbMult;
             let earned = Math.ceil(baseEarned * mult * grazeMult);
-            
+
             pData.orbs += earned;
             earnedOrbsSpan.innerText = earned;
             if (grazeMult > 1.0) {
@@ -791,10 +891,10 @@
             isStunned = true;
             triggerShake();
             playSound('win');
-            
+
             uiTitle.innerText = "YOU SURVIVED!";
             uiTitle.className = "text-4xl font-bold mb-1 text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]";
-            
+
             let subMsg = document.getElementById('winSubMessage');
             if (!subMsg) {
                 subMsg = document.createElement('p');
@@ -806,8 +906,8 @@
             subMsg.style.display = 'block';
 
             finalScoreSpan.innerText = survivalTime;
-            processGameEnd(); 
-            
+            processGameEnd();
+
             gameHeader.classList.add('opacity-0');
             setTimeout(() => gameHeader.classList.add('hidden'), 500);
             homeScreen.classList.add('hidden');
@@ -823,17 +923,17 @@
             isPlaying = false;
             triggerShake();
             playSound('crash');
-            spawnParticles(player.x, player.y, '#ef4444', 40); 
-            
+            spawnParticles(player.x, player.y, '#ef4444', 40);
+
             const messages = ["You Were Eaten!", "Game Over!", "The Snake Got You!", "Yum!"];
             uiTitle.innerText = messages[Math.floor(Math.random() * messages.length)];
             uiTitle.className = "text-4xl font-bold mb-1 text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]";
-            
+
             if (winSubMessage) winSubMessage.style.display = 'none';
-            
+
             finalScoreSpan.innerText = survivalTime;
             processGameEnd();
-            
+
             gameHeader.classList.add('opacity-0');
             setTimeout(() => gameHeader.classList.add('hidden'), 500);
             homeScreen.classList.add('hidden');
@@ -842,7 +942,7 @@
             uiOverlay.classList.remove('hidden');
 
             canvas.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.5)";
-            draw(); 
+            draw();
         }
 
         // --- Render System ---
@@ -853,7 +953,7 @@
                 ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvasSize); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvasSize, i); ctx.stroke();
             }
-            
+
             if (activePowerup) {
                 ctx.shadowBlur = 10;
                 if (activePowerup.type === 'ice') {
@@ -878,17 +978,17 @@
                 } else if (isStunned) {
                     ctx.fillStyle = index === 0 ? '#94a3b8' : '#64748b';
                 } else {
-                    ctx.fillStyle = index === 0 ? diffConfig.headColor : diffConfig.bodyColor; 
+                    ctx.fillStyle = index === 0 ? diffConfig.headColor : diffConfig.bodyColor;
                 }
-                
-                let sizeRatio = Math.max(0.4, 1 - (index / snake.length) * 0.7); 
-                if (index === 0) sizeRatio = 1; 
-                
+
+                let sizeRatio = Math.max(0.4, 1 - (index / snake.length) * 0.7);
+                if (index === 0) sizeRatio = 1;
+
                 let s = (gridSize - 2) * sizeRatio;
                 let offset = (gridSize - s) / 2;
 
                 ctx.beginPath(); ctx.roundRect(segment.x * gridSize + offset, segment.y * gridSize + offset, s, s, 4); ctx.fill();
-                
+
                 if (index === 0) {
                     if (isStunned || isFrozen) {
                         ctx.strokeStyle = isFrozen ? '#0ea5e9' : '#000'; ctx.lineWidth = 2;
@@ -907,10 +1007,10 @@
 
             let head = snake[0];
             let dist = Math.abs(head.x - player.x) + Math.abs(head.y - player.y);
-            
+
             if (dist <= 4 && isPlaying && !isFrozen) {
-                let pulse = (Math.sin(performance.now() / 150) + 1) / 2; 
-                let intensity = (5 - dist) * 0.2 * pulse; 
+                let pulse = (Math.sin(performance.now() / 150) + 1) / 2;
+                let intensity = (5 - dist) * 0.2 * pulse;
                 ctx.shadowBlur = 15 + (15 * pulse);
                 ctx.shadowColor = `rgba(239, 68, 68, ${0.5 + intensity})`;
                 canvas.style.boxShadow = `0 0 ${20 + 30 * pulse}px rgba(239, 68, 68, ${0.4 + intensity})`;
@@ -927,18 +1027,18 @@
                 ctx.fillStyle = '#78350f'; ctx.fillRect(2, 11, gridSize - 4, 5);
                 ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.roundRect(2, 17, gridSize - 4, 4, [0, 0, 4, 4]); ctx.fill();
             } else if (skin === 'pizza') {
-                ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.moveTo(gridSize/2, 2); ctx.lineTo(gridSize-2, gridSize-2); ctx.lineTo(2, gridSize-2); ctx.closePath(); ctx.fill();
-                ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(gridSize/2, gridSize/2 + 2, 2, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(gridSize/2 - 4, gridSize - 6, 2, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(gridSize/2 + 4, gridSize - 5, 2, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.moveTo(gridSize / 2, 2); ctx.lineTo(gridSize - 2, gridSize - 2); ctx.lineTo(2, gridSize - 2); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(gridSize / 2, gridSize / 2 + 2, 2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(gridSize / 2 - 4, gridSize - 6, 2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(gridSize / 2 + 4, gridSize - 5, 2, 0, Math.PI * 2); ctx.fill();
             } else if (skin === 'diamond') {
                 ctx.fillStyle = '#06b6d4'; ctx.shadowBlur = 10; ctx.shadowColor = '#06b6d4';
-                ctx.beginPath(); ctx.moveTo(gridSize/2, 2); ctx.lineTo(gridSize-2, gridSize/2); ctx.lineTo(gridSize/2, gridSize-2); ctx.lineTo(2, gridSize/2); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+                ctx.beginPath(); ctx.moveTo(gridSize / 2, 2); ctx.lineTo(gridSize - 2, gridSize / 2); ctx.lineTo(gridSize / 2, gridSize - 2); ctx.lineTo(2, gridSize / 2); ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
             } else {
                 ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.roundRect(2, 2, gridSize - 4, gridSize - 4, 6); ctx.fill();
             }
             ctx.restore();
-            
+
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.03;
                 if (p.life <= 0) particles.splice(i, 1);
@@ -946,7 +1046,7 @@
                     ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
                 }
             }
-            ctx.globalAlpha = 1.0; 
+            ctx.globalAlpha = 1.0;
         }
 
         // --- Input & Screen Wrapping ---
@@ -959,7 +1059,7 @@
             // Screen Wrapping Logic
             if (newX < 0) { newX = tileCount - 1; didWrap = true; }
             else if (newX >= tileCount) { newX = 0; didWrap = true; }
-            
+
             if (newY < 0) { newY = tileCount - 1; didWrap = true; }
             else if (newY >= tileCount) { newY = 0; didWrap = true; }
 
@@ -967,16 +1067,16 @@
 
             player.x = newX;
             player.y = newY;
-            
+
             checkPowerups();
-            checkCollisions(); 
-            if(isPlaying) draw(); 
+            checkCollisions();
+            if (isPlaying) draw();
         }
 
         document.addEventListener('keydown', (e) => {
-            if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) e.preventDefault();
+            if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(e.code) > -1) e.preventDefault();
             if (!isPlaying) return;
-            
+
             if (e.key === 'p' || e.key === 'Escape') {
                 togglePause();
                 return;
@@ -987,10 +1087,10 @@
             if (e.key === 't' || e.key === 'T') {
                 if (teleports > 0) {
                     playSound('teleport');
-                    spawnParticles(player.x, player.y, '#3b82f6', 15); 
-                    teleports--; snakeBlindSteps = 1; respawnPlayer(); 
-                    spawnParticles(player.x, player.y, '#3b82f6', 15); 
-                    updateDashboard(); if(isPlaying) draw();
+                    spawnParticles(player.x, player.y, '#3b82f6', 15);
+                    teleports--; snakeBlindSteps = 1; respawnPlayer();
+                    spawnParticles(player.x, player.y, '#3b82f6', 15);
+                    updateDashboard(); if (isPlaying) draw();
                 }
                 return;
             }
@@ -1014,13 +1114,13 @@
             e.preventDefault();
             let currentX = e.touches[0].clientX, currentY = e.touches[0].clientY;
             let dx = currentX - touchStartX, dy = currentY - touchStartY;
-            
+
             // Lowered threshold and preserved momentum for much smoother continuous swiping
-            let threshold = 18; 
+            let threshold = 18;
 
             if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
-                tapToTeleport = false; 
-                
+                tapToTeleport = false;
+
                 let now = performance.now();
                 if (now - lastTouchMoveTime < 35) {
                     // Prevent queueing up too many moves by capping the accumulated delta
@@ -1049,21 +1149,21 @@
             if (tapToTeleport && teleports > 0) {
                 playSound('teleport'); spawnParticles(player.x, player.y, '#3b82f6', 15);
                 teleports--; snakeBlindSteps = 1; respawnPlayer(); spawnParticles(player.x, player.y, '#3b82f6', 15);
-                updateDashboard(); if(isPlaying) draw();
+                updateDashboard(); if (isPlaying) draw();
             }
         });
 
         // --- Menu & Market Logic ---
         startBtn.addEventListener('click', initGame);
         restartBtn.addEventListener('click', initGame);
-        
+
         function showHome() {
             gameOverScreen.classList.add('hidden');
             marketScreen.classList.add('hidden');
             achieveScreen.classList.add('hidden');
             marketScreen.classList.remove('flex'); // Remove flex class when hiding absolute panes
             achieveScreen.classList.remove('flex');
-            
+
             homeScreen.classList.remove('hidden');
             topMenuStats.classList.remove('hidden'); // Show stats again
             drawGridOnly();
@@ -1072,17 +1172,17 @@
         closeMenuBtns.forEach(btn => btn.addEventListener('click', showHome));
 
         openMarketBtn.addEventListener('click', () => {
-            homeScreen.classList.add('hidden'); 
+            homeScreen.classList.add('hidden');
             topMenuStats.classList.add('hidden'); // Hide stats to give market max space
-            marketScreen.classList.remove('hidden'); 
+            marketScreen.classList.remove('hidden');
             marketScreen.classList.add('flex'); // Add flex for layout
             renderMarket();
         });
 
         openAchieveBtn.addEventListener('click', () => {
-            homeScreen.classList.add('hidden'); 
+            homeScreen.classList.add('hidden');
             topMenuStats.classList.add('hidden'); // Hide stats to give achieves max space
-            achieveScreen.classList.remove('hidden'); 
+            achieveScreen.classList.remove('hidden');
             achieveScreen.classList.add('flex'); // Add flex for layout
             renderAchievements();
         });
@@ -1095,7 +1195,7 @@
 
         function renderMarket() {
             const list = document.getElementById('upgradeList'); list.innerHTML = '';
-            
+
             list.innerHTML += '<h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2 sticky top-0 bg-slate-900/95 py-2 backdrop-blur-sm z-10 border-b border-slate-700/50">Upgrades</h3>';
             Object.keys(upgradeInfo).forEach(key => {
                 const info = upgradeInfo[key], currentLevel = pData.upgrades[key], isMax = currentLevel >= maxLevel;
@@ -1154,11 +1254,12 @@
                 ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvasSize, i); ctx.stroke();
             }
         }
-        
+
         // Start initial rendering and fetch save data
         drawGridOnly();
         initCloudStorage();
 
     </script>
 </body>
+
 </html>
