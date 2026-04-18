@@ -1022,7 +1022,7 @@
                 tapToTeleport = false; 
                 
                 let now = performance.now();
-                if (now - lastTouchMoveTime < 60) {
+                if (now - lastTouchMoveTime < 35) {
                     // Prevent queueing up too many moves by capping the accumulated delta
                     if (Math.abs(currentX - touchStartX) > threshold * 1.5) {
                         touchStartX = currentX - (dx > 0 ? threshold * 1.5 : -threshold * 1.5);
