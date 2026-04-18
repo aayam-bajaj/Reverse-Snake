@@ -1022,13 +1022,13 @@
                 tapToTeleport = false; 
                 
                 let now = performance.now();
-                if (now - lastTouchMoveTime < 60) {
+                if (now - lastTouchMoveTime < 40) {
                     // Prevent queueing up too many moves by capping the accumulated delta
-                    if (Math.abs(currentX - touchStartX) > threshold * 1.5) {
-                        touchStartX = currentX - (dx > 0 ? threshold * 1.5 : -threshold * 1.5);
+                    if (Math.abs(currentX - touchStartX) > threshold * 2.5) {
+                        touchStartX = currentX - (dx > 0 ? threshold * 2.5 : -threshold * 2.5);
                     }
-                    if (Math.abs(currentY - touchStartY) > threshold * 1.5) {
-                        touchStartY = currentY - (dy > 0 ? threshold * 1.5 : -threshold * 1.5);
+                    if (Math.abs(currentY - touchStartY) > threshold * 2.5) {
+                        touchStartY = currentY - (dy > 0 ? threshold * 2.5 : -threshold * 2.5);
                     }
                     return;
                 }
