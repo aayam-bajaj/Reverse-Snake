@@ -1003,6 +1003,7 @@
 
         // Touch Controls
         let touchStartX = 0, touchStartY = 0, tapToTeleport = true;
+        let lastTouchMoveTime = 0;
         canvas.addEventListener('touchstart', (e) => {
             if (!isPlaying || isPaused) return;
             touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; tapToTeleport = true;
@@ -1019,6 +1020,19 @@
 
             if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
                 tapToTeleport = false; 
+                
+                let now = performance.now();
+                if (now - lastTouchMoveTime < 60) {
+                    // Prevent queueing up too many moves by capping the accumulated delta
+                    if (Math.abs(currentX - touchStartX) > threshold * 1.5) {
+                        touchStartX = currentX - (dx > 0 ? threshold * 1.5 : -threshold * 1.5);
+                    }
+                    if (Math.abs(currentY - touchStartY) > threshold * 1.5) {
+                        touchStartY = currentY - (dy > 0 ? threshold * 1.5 : -threshold * 1.5);
+                    }
+                    return;
+                }
+
                 if (Math.abs(dx) > Math.abs(dy)) {
                     movePlayer(dx > 0 ? 1 : -1, 0);
                     touchStartX += dx > 0 ? threshold : -threshold;
@@ -1026,6 +1040,7 @@
                     movePlayer(0, dy > 0 ? 1 : -1);
                     touchStartY += dy > 0 ? threshold : -threshold;
                 }
+                lastTouchMoveTime = now;
             }
         }, { passive: false });
 
