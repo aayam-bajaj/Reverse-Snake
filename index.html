@@ -338,7 +338,10 @@
             pizza: { name: '🍕 Pizza Slice', desc: 'Extra cheesy corners', cost: 100 },
             donut: { name: '🍩 Pink Donut', desc: 'Sweet with sprinkles', cost: 200 },
             sushi: { name: '🍣 Salmon Sushi', desc: 'Fresh and raw', cost: 300 },
-            watermelon: { name: '🍉 Watermelon', desc: 'Juicy summer treat', cost: 400 }
+            watermelon: { name: '🍉 Watermelon', desc: 'Juicy summer treat', cost: 400 },
+            chicken: { name: '🍗 Fried Chicken', desc: 'Crispy and golden', cost: 500 },
+            waffle: { name: '🧇 Waffle', desc: 'Syrup included', cost: 600 },
+            icecream: { name: '🍦 Ice Cream', desc: 'Vanilla swirl', cost: 700 }
         };
         const achieveInfo = {
             survive60: { name: 'Survivalist', desc: 'Survive for 60 seconds in one game.', reward: 100 },
@@ -1048,6 +1051,34 @@
                 ctx.fillRect(8, 16, 2, 2);
                 ctx.fillRect(12, 18, 2, 2);
                 ctx.fillRect(16, 16, 2, 2);
+            } else if (skin === 'chicken') {
+                ctx.fillStyle = '#fef3c7';
+                ctx.fillRect(4, 14, 6, 4);
+                ctx.beginPath(); ctx.arc(4, 14, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(4, 18, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#b45309';
+                ctx.beginPath(); ctx.arc(14, 12, 8, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(11, 15, 6, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#d97706';
+                ctx.beginPath(); ctx.arc(15, 11, 4, 0, Math.PI * 2); ctx.fill();
+            } else if (skin === 'waffle') {
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath(); ctx.roundRect(3, 3, 19, 19, 3); ctx.fill();
+                ctx.fillStyle = '#b45309';
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        ctx.fillRect(5 + i * 5, 5 + j * 5, 3, 3);
+                    }
+                }
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(10, 8, 6, 6);
+            } else if (skin === 'icecream') {
+                ctx.fillStyle = '#d97706';
+                ctx.beginPath(); ctx.moveTo(4, 10); ctx.lineTo(21, 10); ctx.lineTo(12.5, 24); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#fbcfe8';
+                ctx.beginPath(); ctx.arc(12.5, 9, 8, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath(); ctx.arc(12.5, 2, 3, 0, Math.PI * 2); ctx.fill();
             } else {
                 ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.roundRect(2, 2, gridSize - 4, gridSize - 4, 6); ctx.fill();
             }
