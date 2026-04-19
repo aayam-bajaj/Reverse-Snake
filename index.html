@@ -442,53 +442,30 @@
             }
         }
 
-        // --- Audio System (SFX & Retro BGM) ---
+        // --- Audio System (SFX & BGM) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let bgmTimeout;
-        let bgmStep = 0;
         let isMuted = false;
 
-        // Shifted up by 2 octaves so it is clearly audible on phone and laptop speakers!
-        const bassNotes = [130.81, 130.81, 155.56, 174.61]; // C3, C3, Eb3, F3
+        const bgmAudio = new Audio('The_Rearview.mp3');
+        bgmAudio.loop = true;
+        bgmAudio.volume = 0.5;
 
         muteBtn.addEventListener('click', () => {
             isMuted = !isMuted;
             muteBtn.innerText = isMuted ? '🔇' : '🔊';
             muteBtn.classList.toggle('opacity-50', isMuted);
-            if (isMuted && bgmTimeout) clearTimeout(bgmTimeout);
-            if (!isMuted && isPlaying && !isPaused) playBGM();
+            bgmAudio.muted = isMuted;
+            
+            if (isMuted) {
+                bgmAudio.pause();
+            } else if (isPlaying && !isPaused) {
+                bgmAudio.play().catch(e => console.warn("Audio play failed:", e));
+            }
         });
 
         function playBGM() {
             if (!isPlaying || isPaused || isMuted) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            const filter = audioCtx.createBiquadFilter();
-
-            // Bass patch - Using sawtooth for an aggressive retro arcade buzz
-            osc.type = 'sawtooth';
-            osc.frequency.value = bassNotes[bgmStep % bassNotes.length];
-
-            // Lowpass Envelope filter - Widened the cutoff so high frequencies come through
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
-            filter.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
-
-            osc.connect(filter);
-            filter.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            // Volume Envelope - Slightly louder
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.15);
-
-            bgmStep++;
-            // BGM Tempo scales with snake speed! Fast snake = intense music
-            let delay = Math.max(120, snakeSpeed * 0.9);
-            bgmTimeout = setTimeout(playBGM, delay);
+            bgmAudio.play().catch(e => console.warn("Audio play failed:", e));
         }
 
         function playSound(type) {
@@ -642,8 +619,7 @@
             updateDashboard();
 
             // Start BGM
-            bgmStep = 0;
-            if (bgmTimeout) clearTimeout(bgmTimeout);
+            bgmAudio.currentTime = 0;
             playBGM();
 
             requestAnimationFrame(gameLoop);
@@ -656,7 +632,7 @@
             if (isPaused) {
                 pauseOverlay.classList.remove('hidden');
                 pauseStartTime = performance.now();
-                if (bgmTimeout) clearTimeout(bgmTimeout);
+                bgmAudio.pause();
             } else {
                 pauseOverlay.classList.add('hidden');
                 // Adjust timers so physics don't jump forward
@@ -866,7 +842,7 @@
         }
 
         function processGameEnd() {
-            if (bgmTimeout) clearTimeout(bgmTimeout);
+            bgmAudio.pause();
             let baseEarned = Math.ceil(survivalTime / 2);
             let mult = difficulties[currentDiff].orbMult;
             let earned = Math.ceil(baseEarned * mult * grazeMult);
