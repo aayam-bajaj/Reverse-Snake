@@ -92,9 +92,6 @@
         🔊
     </button>
 
-    <!-- Background Music Element -->
-    <audio id="bgmAudio" src="./The_Rearview.mp3" loop preload="auto"></audio>
-
     <!-- Active Game Header (Hidden on Home Screen) -->
     <div id="gameHeader"
         class="text-center mb-2 sm:mb-4 hidden opacity-0 transition-opacity duration-500 h-14 sm:h-16 w-full max-w-[500px] flex flex-col items-center justify-center relative">
@@ -447,36 +444,51 @@
 
         // --- Audio System (SFX & Retro BGM) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let bgmTimeout;
+        let bgmStep = 0;
         let isMuted = false;
 
-        const bgmAudio = document.getElementById('bgmAudio');
-        bgmAudio.volume = 1.0; // Set to max volume to ensure it can be heard
+        // Shifted up by 2 octaves so it is clearly audible on phone and laptop speakers!
+        const bassNotes = [130.81, 130.81, 155.56, 174.61]; // C3, C3, Eb3, F3
 
         muteBtn.addEventListener('click', () => {
             isMuted = !isMuted;
             muteBtn.innerText = isMuted ? '🔇' : '🔊';
             muteBtn.classList.toggle('opacity-50', isMuted);
-            bgmAudio.muted = isMuted;
-            if (isMuted) {
-                bgmAudio.pause();
-            } else if (isPlaying && !isPaused) {
-                bgmAudio.play().catch(e => console.warn("Audio play blocked", e));
-            }
+            if (isMuted && bgmTimeout) clearTimeout(bgmTimeout);
+            if (!isMuted && isPlaying && !isPaused) playBGM();
         });
 
         function playBGM() {
-            if (!isPlaying || isPaused || isMuted) {
-                bgmAudio.pause();
-                return;
-            }
-            bgmAudio.play().catch(e => console.warn("Audio play blocked", e));
-        }
+            if (!isPlaying || isPaused || isMuted) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
 
-        function stopBGM() {
-            bgmAudio.pause();
-            if (bgmAudio.readyState >= 2) {
-                bgmAudio.currentTime = 0;
-            }
+            // Bass patch - Using sawtooth for an aggressive retro arcade buzz
+            osc.type = 'sawtooth';
+            osc.frequency.value = bassNotes[bgmStep % bassNotes.length];
+
+            // Lowpass Envelope filter - Widened the cutoff so high frequencies come through
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            // Volume Envelope - Slightly louder
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+
+            bgmStep++;
+            // BGM Tempo scales with snake speed! Fast snake = intense music
+            let delay = Math.max(120, snakeSpeed * 0.9);
+            bgmTimeout = setTimeout(playBGM, delay);
         }
 
         function playSound(type) {
@@ -630,7 +642,8 @@
             updateDashboard();
 
             // Start BGM
-            stopBGM();
+            bgmStep = 0;
+            if (bgmTimeout) clearTimeout(bgmTimeout);
             playBGM();
 
             requestAnimationFrame(gameLoop);
@@ -643,7 +656,7 @@
             if (isPaused) {
                 pauseOverlay.classList.remove('hidden');
                 pauseStartTime = performance.now();
-                bgmAudio.pause();
+                if (bgmTimeout) clearTimeout(bgmTimeout);
             } else {
                 pauseOverlay.classList.add('hidden');
                 // Adjust timers so physics don't jump forward
@@ -853,7 +866,7 @@
         }
 
         function processGameEnd() {
-            stopBGM();
+            if (bgmTimeout) clearTimeout(bgmTimeout);
             let baseEarned = Math.ceil(survivalTime / 2);
             let mult = difficulties[currentDiff].orbMult;
             let earned = Math.ceil(baseEarned * mult * grazeMult);
