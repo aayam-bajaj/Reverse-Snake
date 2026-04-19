@@ -92,6 +92,9 @@
         🔊
     </button>
 
+    <!-- Background Music Element -->
+    <audio id="bgmAudio" src="./The_Rearview.mp3" loop preload="auto"></audio>
+
     <!-- Active Game Header (Hidden on Home Screen) -->
     <div id="gameHeader"
         class="text-center mb-2 sm:mb-4 hidden opacity-0 transition-opacity duration-500 h-14 sm:h-16 w-full max-w-[500px] flex flex-col items-center justify-center relative">
@@ -446,9 +449,8 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isMuted = false;
 
-        const bgmAudio = new Audio('The_Rearview.mp3');
-        bgmAudio.loop = true;
-        bgmAudio.volume = 0.5;
+        const bgmAudio = document.getElementById('bgmAudio');
+        bgmAudio.volume = 1.0; // Set to max volume to ensure it can be heard
 
         muteBtn.addEventListener('click', () => {
             isMuted = !isMuted;
@@ -472,7 +474,9 @@
 
         function stopBGM() {
             bgmAudio.pause();
-            bgmAudio.currentTime = 0;
+            if (bgmAudio.readyState >= 2) {
+                bgmAudio.currentTime = 0;
+            }
         }
 
         function playSound(type) {
