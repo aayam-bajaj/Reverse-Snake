@@ -95,8 +95,7 @@
     <!-- Active Game Header (Hidden on Home Screen) -->
     <div id="gameHeader"
         class="text-center mb-2 sm:mb-4 hidden opacity-0 transition-opacity duration-500 h-14 sm:h-16 w-full max-w-[500px] flex flex-col items-center justify-center relative">
-        <p id="tipDisplay" class="text-yellow-400 text-xs sm:text-sm font-bold animate-pulse mb-2">Tip: Walk off the
-            edge of the screen to wrap around!</p>
+        <p id="tipDisplay" class="text-yellow-400 text-xs sm:text-sm font-bold animate-pulse mb-2">Tip: Graze the snake to build your multiplier!</p>
 
         <!-- Graze Multiplier UI -->
         <div id="grazeUI"
@@ -347,7 +346,7 @@
             survive60: { name: 'Survivalist', desc: 'Survive for 60 seconds in one game.', reward: 100 },
             wallTrick: { name: 'Matador', desc: 'Trick the snake into crashing into a wall.', reward: 50 },
             grazeMaster: { name: 'Daredevil', desc: 'Reach a 4.0x Graze Multiplier.', reward: 100 },
-            pacman: { name: 'Portal Jumper', desc: 'Wrap around the screen 10 times in a single game.', reward: 50 }
+            pacman: { name: 'Untouchable', desc: 'Survive for 120 seconds in one game.', reward: 150 }
         };
 
         // --- Cloud Storage Implemention ---
@@ -685,7 +684,7 @@
 
             // Check Achievements
             if (survivalTime >= 60) unlockAchievement('survive60');
-            if (wrapCount >= 10) unlockAchievement('pacman');
+            if (survivalTime >= 120) unlockAchievement('pacman');
 
             adjustDifficulty();
 
@@ -1094,21 +1093,16 @@
             ctx.globalAlpha = 1.0;
         }
 
-        // --- Input & Screen Wrapping ---
+        // --- Input Handling ---
         function movePlayer(dx, dy) {
             if (isPaused) return;
             let newX = player.x + dx;
             let newY = player.y + dy;
-            let didWrap = false;
 
-            // Screen Wrapping Logic
-            if (newX < 0) { newX = tileCount - 1; didWrap = true; }
-            else if (newX >= tileCount) { newX = 0; didWrap = true; }
-
-            if (newY < 0) { newY = tileCount - 1; didWrap = true; }
-            else if (newY >= tileCount) { newY = 0; didWrap = true; }
-
-            if (didWrap) wrapCount++;
+            // Wall Collision Logic (Block movement)
+            if (newX < 0 || newX >= tileCount || newY < 0 || newY >= tileCount) {
+                return; // Cannot move outside the grid
+            }
 
             player.x = newX;
             player.y = newY;
