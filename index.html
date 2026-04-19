@@ -446,7 +446,7 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isMuted = false;
 
-        const bgmAudio = new Audio('TunePocket-Fur-Elize-Beethoven-Sped-Up-45-RPM-Preview.mp3');
+        const bgmAudio = new Audio('m1.mp3');
         bgmAudio.loop = true;
         bgmAudio.volume = 0.25;
         bgmAudio.setAttribute('playsinline', '');
@@ -470,7 +470,7 @@
             muteBtn.innerText = isMuted ? '🔇' : '🔊';
             muteBtn.classList.toggle('opacity-50', isMuted);
             bgmAudio.muted = isMuted;
-            
+
             if (isMuted) {
                 bgmAudio.pause();
             } else if (isPlaying && !isPaused) {
