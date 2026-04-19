@@ -449,6 +449,21 @@
         const bgmAudio = new Audio('The_Rearview.mp3');
         bgmAudio.loop = true;
         bgmAudio.volume = 0.5;
+        bgmAudio.setAttribute('playsinline', '');
+        bgmAudio.preload = 'auto';
+        bgmAudio.style.display = 'none';
+        document.body.appendChild(bgmAudio);
+
+        // Mobile Fix: Ensure audio context and BGM stay active on user interaction
+        const ensureAudioActive = () => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (isPlaying && !isPaused && !isMuted && bgmAudio.paused) {
+                bgmAudio.play().catch(e => console.warn("Mobile BGM force resume failed:", e));
+            }
+        };
+        document.addEventListener('touchstart', ensureAudioActive, { passive: true });
+        document.addEventListener('click', ensureAudioActive, { passive: true });
+        document.addEventListener('keydown', ensureAudioActive, { passive: true });
 
         muteBtn.addEventListener('click', () => {
             isMuted = !isMuted;
